@@ -46,3 +46,20 @@ Thumbs.db
 # Local config
 anomaly-daemon/config.json
 engine/.env
+
+# Node.js / Desktop app
+dashboard/node_modules/
+dashboard/dist/
+dashboard/src-tauri/assets/
+desktop/node_modules/
+desktop/dist/
+desktop/src-tauri/target/
+desktop/src-tauri/assets/
+
+# Rust
+**/target/
+
+# Tauri build artifacts
+*.AppImage
+*.deb
+*.rpm
