@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    container_name: clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    environment:
+      CLICKHOUSE_DB: telemetry
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.112.0
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8888:8888"   # Prometheus metrics
+      - "13133:13133" # Health check
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+
+  checkout-service:
+    build:
+      context: ./demo-app/checkout-service
+      dockerfile: Dockerfile
+    container_name: checkout-service
+    ports:
+      - "8001:8000"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=checkout-service
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=checkout-service,deployment.environment=demo
+      - PAYMENT_SERVICE_URL=http://payment-service:8000
+    depends_on:
+      - otel-collector
+      - payment-service
+
+  payment-service:
+    build:
+      context: ./demo-app/payment-service
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "8002:8000"
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=payment-service
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=payment-service,deployment.environment=demo
+
+volumes:
+  clickhouse-data:

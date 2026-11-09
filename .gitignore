@@ -1,0 +1,48 @@
+# Build artifacts
+anomaly-daemon/anomaly-daemon
+*.exe
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.venv/
+venv/
+env/
+
+# Go
+go.work
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+.docker/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Runbook outputs
+*.md
+!README.md
+!**/README.md
+
+# Local config
+anomaly-daemon/config.json
+engine/.env
